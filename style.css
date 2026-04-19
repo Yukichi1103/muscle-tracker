@@ -1158,94 +1158,128 @@ footer {
     gap: 4px;
   }
 
-  /* --- ヒーローパネル --- */
+  /* --- ヒーローパネル（2列レイアウト：縦長を防ぐ） --- */
+  /* [ランク | ストリーク]
+     [   週達成率（全幅）  ] */
   .hero-section {
+    grid-template-columns: 1fr 1fr;
     border-radius: 14px;
   }
 
-  .hero-block {
-    padding: 18px 12px;
-    gap: 4px;
+  /* ランク-ストリーク間セパレーター → 非表示 */
+  .hero-section > *:nth-child(2) {
+    display: none;
   }
 
-  .hero-sep {
-    margin: 0 10px;
+  /* ストリーク-週達成率間セパレーター → 全幅水平線 */
+  .hero-section > *:nth-child(4) {
+    grid-column: 1 / -1;
+    width: auto;
+    height: 1px;
+    margin: 0 14px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
   }
+
+  /* 週達成率ブロック → 全幅 + グリッド横並び（リング左、ラベル右） */
+  .hero-weekly-block {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 14px;
+    row-gap: 4px;
+    padding: 14px 16px;
+    text-align: left;
+  }
+
+  .hero-weekly-block .ring-wrap {
+    grid-row: 1 / 3;
+    width: 66px;
+    height: 66px;
+    margin-bottom: 0;
+  }
+
+  .hero-weekly-block .progress-ring {
+    width: 66px;
+    height: 66px;
+  }
+
+  .hero-weekly-block .ring-pct {
+    font-size: 0.88rem;
+  }
+
+  .hero-weekly-block .ring-sub-label {
+    font-size: 0.5rem;
+  }
+
+  .hero-block {
+    padding: 16px 10px;
+    gap: 3px;
+  }
+
+  /* 省スペース：補助テキストを非表示 */
+  .milestone-pills { display: none; }
+  .streak-msg      { display: none; }
+  .cal-label       { display: none; }
+  .rank-label-sm   { display: none; }
 
   /* ランク */
   .rank-diamond {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
+    width: 50px;
+    height: 50px;
+    border-radius: 11px;
   }
 
   .rank-diamond-inner {
-    font-size: 1.55rem;
+    font-size: 1.35rem;
   }
 
   .rank-name-lg {
-    font-size: 1.2rem;
-  }
-
-  .rank-label-sm {
-    font-size: 0.6rem;
+    font-size: 1.1rem;
   }
 
   .rank-session-count {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
+  }
+
+  .xp-bar-wrap {
+    margin: 2px 0 1px;
   }
 
   .xp-label {
-    font-size: 0.62rem;
+    font-size: 0.58rem;
   }
 
   /* ストリーク */
   .streak-fire {
-    font-size: 1.6rem;
+    font-size: 1.45rem;
   }
 
   .streak-big-num {
-    font-size: 2.6rem;
+    font-size: 2.4rem;
   }
 
   .streak-unit {
-    font-size: 0.9rem;
+    font-size: 0.82rem;
   }
 
   .streak-title {
-    font-size: 0.62rem;
-  }
-
-  .streak-msg {
-    font-size: 0.72rem;
+    font-size: 0.6rem;
   }
 
   .cal-dot {
-    width: 9px;
-    height: 9px;
+    width: 8px;
+    height: 8px;
   }
 
   .week-dots {
     gap: 5px;
-  }
-
-  /* リング */
-  .ring-wrap {
-    width: 78px;
-    height: 78px;
-  }
-
-  .progress-ring {
-    width: 78px;
-    height: 78px;
-  }
-
-  .ring-pct {
-    font-size: 1rem;
+    margin-top: 4px;
   }
 
   .weekly-detail-label {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
   }
 
   /* --- スタッツカード（3列維持・コンパクト） --- */
@@ -1436,7 +1470,6 @@ footer {
     max-width: 88vw;
     bottom: max(20px, env(safe-area-inset-bottom, 20px));
   }
-}
 
   /* --- チュートリアルカード --- */
   .tut-card {
@@ -1460,11 +1493,17 @@ footer {
   .tut-desc {
     font-size: 0.83rem;
   }
-}
+
+} /* end @media (max-width: 480px) */
 
 @media (max-width: 380px) {
+  /* 3入力（重量/回数/セット）→ 2列に */
   .form-row.three-col { grid-template-columns: 1fr 1fr; }
-  .streak-big-num { font-size: 2.2rem; }
+  /* Android極小幅でのストリーク数字 */
+  .streak-big-num { font-size: 2rem; }
+  /* 2列ヒーローが狭すぎる場合のランク調整 */
+  .rank-name-lg { font-size: 1rem; }
+  .hero-block { padding: 14px 8px; }
 }
 
 /* ======================================
