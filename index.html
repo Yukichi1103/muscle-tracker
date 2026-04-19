@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IRON LOG — 筋トレ管理ツール</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ======== ヘッダー ======== -->
+  <header>
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="header-logo">💪 IRON LOG</div>
+        <div class="header-tagline">あなたの成長を、数字で証明する。</div>
+      </div>
+      <div class="header-right-group">
+        <div class="header-rank-pill" id="headerRankPill">
+          <span id="headerRankIcon">🌱</span>
+          <span id="headerRankName">ルーキー</span>
+        </div>
+        <button class="help-btn" id="helpBtn" title="使い方を見る">？</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ==============================
+         ヒーローパネル
+         ランク / ストリーク / 週達成率
+    ================================= -->
+    <section class="hero-section">
+
+      <!-- ブロック① ランク -->
+      <div class="hero-block hero-rank-block">
+        <div class="rank-diamond-wrap">
+          <div class="rank-diamond" id="rankDiamond">
+            <span class="rank-diamond-inner" id="rankDiamondIcon">🌱</span>
+          </div>
+        </div>
+        <div class="rank-label-sm">現在のランク</div>
+        <div class="rank-name-lg" id="rankNameLg">ルーキー</div>
+        <div class="rank-session-count" id="rankSessionCount">0 回</div>
+        <div class="xp-bar-wrap">
+          <div class="xp-bar" id="xpBar" style="width: 0%">
+            <div class="xp-shine"></div>
+          </div>
+        </div>
+        <div class="xp-label" id="xpLabel">次まで あと 5 回</div>
+        <div class="milestone-pills" id="milestonePills">
+          <!-- JSで生成 -->
+        </div>
+      </div>
+
+      <!-- セパレーター -->
+      <div class="hero-sep"></div>
+
+      <!-- ブロック② ストリーク -->
+      <div class="hero-block hero-streak-block">
+        <div class="streak-badge">
+          <span class="streak-fire">🔥</span>
+          <span class="streak-big-num" id="streakBigNum">0</span>
+          <span class="streak-unit">日</span>
+        </div>
+        <div class="streak-title">連続ストリーク</div>
+        <div class="streak-msg" id="streakMsg">今日もジムへ行こう！</div>
+        <!-- 今週カレンダードット -->
+        <div class="week-dots" id="weekDots">
+          <!-- JSで生成 -->
+        </div>
+      </div>
+
+      <!-- セパレーター -->
+      <div class="hero-sep"></div>
+
+      <!-- ブロック③ 今週達成率 -->
+      <div class="hero-block hero-weekly-block">
+        <div class="ring-wrap">
+          <svg class="progress-ring" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#b06eff" />
+                <stop offset="100%" stop-color="#7c6aff" />
+              </linearGradient>
+              <linearGradient id="ringGradDone" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ffd740" />
+                <stop offset="100%" stop-color="#ff8f00" />
+              </linearGradient>
+            </defs>
+            <!-- 背景トラック -->
+            <circle class="ring-track" cx="45" cy="45" r="36" />
+            <!-- 進捗 -->
+            <circle class="ring-prog" id="ringProg" cx="45" cy="45" r="36"
+              stroke-dasharray="226" stroke-dashoffset="226" />
+          </svg>
+          <div class="ring-center">
+            <div class="ring-pct" id="ringPct">0%</div>
+            <div class="ring-sub-label">今週</div>
+          </div>
+        </div>
+        <div class="weekly-detail-label" id="weeklyDetailLabel">0 / 3 日達成</div>
+        <div class="goal-input-row">
+          <label for="weeklyGoalInput">目標：</label>
+          <input type="number" id="weeklyGoalInput" value="3" min="1" max="7" />日/週
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==============================
+         スタッツ（3 カード）
+    ================================= -->
+    <section class="stats-section">
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-value" id="totalCount">0</div>
+        <div class="stat-label">合計トレ回数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-value" id="totalVolume">0</div>
+        <div class="stat-label">合計ボリューム (kg)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⚖️</div>
+        <div class="stat-value" id="latestWeight">--</div>
+        <div class="stat-label">最新体重 (kg)</div>
+      </div>
+    </section>
+
+    <!-- ==============================
+         種目ごとの最高重量
+    ================================= -->
+    <section class="max-weight-section">
+      <h2>🏆 種目ごとの最高重量</h2>
+      <div id="maxWeightList" class="max-weight-list">
+        <p class="empty-msg">記録がまだありません</p>
+      </div>
+    </section>
+
+    <!-- ==============================
+         重量の伸びグラフ
+    ================================= -->
+    <section class="graph-section">
+      <h2>📈 重量の伸びグラフ</h2>
+      <div class="graph-controls">
+        <label for="graphExercise">種目を選択：</label>
+        <select id="graphExercise">
+          <option value="">-- 種目を選択してください --</option>
+        </select>
+      </div>
+      <div class="canvas-wrapper">
+        <canvas id="weightGraph"></canvas>
+        <p class="graph-empty-msg" id="graphEmptyMsg">種目を選択するとグラフが表示されます</p>
+      </div>
+    </section>
+
+    <!-- ==============================
+         トレーニング記録フォーム
+    ================================= -->
+    <section class="form-section">
+      <h2>📝 今日のトレーニングを記録する</h2>
+      <form id="workoutForm" novalidate>
+
+        <!-- STEP 1: 日付・体重 -->
+        <div class="form-step-label">STEP 1 — 日付・体重</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date">日付</label>
+            <input type="date" id="date" required />
+          </div>
+          <div class="form-group">
+            <label for="bodyWeight">体重 (kg)　<span class="optional">任意</span></label>
+            <input type="number" id="bodyWeight" placeholder="例: 70.5" step="0.1" min="0" />
+          </div>
+        </div>
+
+        <!-- STEP 2: 部位選択（ビジュアルグリッド） -->
+        <div class="form-step-label">STEP 2 — 部位を選ぶ</div>
+        <!-- 値保持用の隠しフィールド -->
+        <input type="hidden" id="bodyPart" />
+        <div class="bp-grid" id="bpGrid">
+          <button type="button" class="bp-btn" data-part="胸"   data-color="blue">💙<br>胸</button>
+          <button type="button" class="bp-btn" data-part="背中" data-color="purple">💜<br>背中</button>
+          <button type="button" class="bp-btn" data-part="肩"   data-color="cyan">🩵<br>肩</button>
+          <button type="button" class="bp-btn" data-part="腕"   data-color="green">💚<br>腕</button>
+          <button type="button" class="bp-btn" data-part="脚"   data-color="orange">🧡<br>脚</button>
+          <button type="button" class="bp-btn" data-part="腹"   data-color="yellow">💛<br>腹</button>
+          <button type="button" class="bp-btn" data-part="全身" data-color="red">❤️<br>全身</button>
+          <button type="button" class="bp-btn" data-part="その他" data-color="gray">🩶<br>その他</button>
+        </div>
+        <div class="bp-error" id="bpError" style="display:none;">部位を選択してください</div>
+
+        <!-- STEP 3: 種目名 + プリセット -->
+        <div class="form-step-label">STEP 3 — 種目名</div>
+        <div class="form-group">
+          <label for="exerciseName">種目名</label>
+          <input type="text" id="exerciseName" placeholder="入力 または 下から選択" required />
+        </div>
+
+        <!-- おすすめ種目プリセット（部位選択後に表示） -->
+        <div class="preset-area" id="presetArea" style="display:none;">
+          <div class="preset-label">💡 おすすめ種目（タップで選択）</div>
+          <div class="preset-chips" id="presetChips"></div>
+          <div class="preset-desc" id="presetDesc"></div>
+        </div>
+
+        <!-- STEP 4: 重量・回数・セット数 -->
+        <div class="form-step-label">STEP 4 — 数値を入力</div>
+        <div class="form-row three-col">
+          <div class="form-group">
+            <label for="weight">重量 (kg)</label>
+            <input type="number" id="weight" placeholder="例: 60" step="0.5" min="0" required />
+          </div>
+          <div class="form-group">
+            <label for="reps">回数</label>
+            <input type="number" id="reps" placeholder="例: 10" min="1" required />
+          </div>
+          <div class="form-group">
+            <label for="sets">セット数</label>
+            <input type="number" id="sets" placeholder="例: 3" min="1" required />
+          </div>
+        </div>
+
+        <!-- ボリューム自動計算プレビュー -->
+        <div class="volume-preview" id="volumePreview">
+          ボリューム: -- kg　（重量 × 回数 × セット数）
+        </div>
+
+        <!-- メモ -->
+        <div class="form-group">
+          <label for="memo">メモ　<span class="optional">任意</span></label>
+          <textarea id="memo" placeholder="例: フォームを意識した、少し疲れていたなど" rows="2"></textarea>
+        </div>
+
+        <button type="submit" class="btn-add">＋ 記録を追加する</button>
+
+      </form>
+    </section>
+
+    <!-- ==============================
+         記録一覧
+    ================================= -->
+    <section class="list-section">
+      <div class="list-header">
+        <h2>📋 記録一覧</h2>
+        <button id="clearAllBtn" class="btn-clear">全削除</button>
+      </div>
+
+      <div class="filter-row">
+        <label for="filterPart">絞り込み：</label>
+        <select id="filterPart">
+          <option value="">すべて</option>
+          <option value="胸">胸</option>
+          <option value="背中">背中</option>
+          <option value="肩">肩</option>
+          <option value="腕">腕</option>
+          <option value="脚">脚</option>
+          <option value="腹">腹</option>
+          <option value="全身">全身</option>
+          <option value="その他">その他</option>
+        </select>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="workoutTable">
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>体重</th>
+              <th>部位</th>
+              <th>種目名</th>
+              <th>重量</th>
+              <th>回数</th>
+              <th>セット</th>
+              <th>ボリューム</th>
+              <th>前回比</th>
+              <th>メモ</th>
+              <th>削除</th>
+            </tr>
+          </thead>
+          <tbody id="workoutTableBody"></tbody>
+        </table>
+        <p class="empty-msg" id="emptyMsg">まだ記録がありません。フォームから追加しましょう！</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>IRON LOG — データはブラウザに自動保存されます（localStorage）</p>
+  </footer>
+
+  <!-- ======================================
+       チュートリアルモーダル
+  ====================================== -->
+  <div class="tut-overlay" id="tutOverlay">
+    <div class="tut-card" id="tutCard">
+
+      <!-- 閉じるボタン -->
+      <button class="tut-close" id="tutClose" aria-label="閉じる">✕</button>
+
+      <!-- プログレスバー -->
+      <div class="tut-progress-track">
+        <div class="tut-progress-bar" id="tutProgressBar" style="width: 25%"></div>
+      </div>
+
+      <!-- ステップ番号 -->
+      <div class="tut-step-num" id="tutStepNum">STEP 1 / 4</div>
+
+      <!-- アイコン -->
+      <div class="tut-icon-circle" id="tutIconCircle">
+        <span class="tut-icon" id="tutIcon">📅</span>
+      </div>
+
+      <!-- タイトル・説明 -->
+      <div class="tut-title" id="tutTitle">まず日付と体重を入力</div>
+      <div class="tut-desc" id="tutDesc"></div>
+
+      <!-- フォームへのヒント矢印 -->
+      <div class="tut-hint" id="tutHint"></div>
+
+      <!-- ドット -->
+      <div class="tut-dots" id="tutDots">
+        <span class="tut-dot active"></span>
+        <span class="tut-dot"></span>
+        <span class="tut-dot"></span>
+        <span class="tut-dot"></span>
+      </div>
+
+      <!-- ボタン -->
+      <div class="tut-actions">
+        <button class="tut-skip" id="tutSkip">スキップ</button>
+        <button class="tut-next" id="tutNext">次へ →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div class="toast" id="toast">
+    <span class="toast-icon" id="toastIcon">🎉</span>
+    <span class="toast-message" id="toastMessage"></span>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
