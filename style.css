@@ -1038,6 +1038,48 @@ footer {
 .toast-icon { font-size: 1.1rem; }
 
 /* ======================================
+   折りたたみセクション（details/summary）
+====================================== */
+.collapsible-section details {
+  /* details はパディングなし — section が持つ */
+}
+
+.collapsible-section details > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.collapsible-section details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible-section details > summary h2 {
+  margin-bottom: 0;
+  flex: 1;
+}
+
+.collapse-arrow {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  transition: transform 0.25s ease;
+  display: none; /* デスクトップでは非表示 */
+}
+
+.collapsible-section details:not([open]) .collapse-arrow {
+  transform: rotate(180deg);
+}
+
+.collapsible-section details[open] > summary {
+  margin-bottom: 18px;
+}
+
+/* ======================================
    レスポンシブ
 ====================================== */
 @media (max-width: 760px) {
@@ -1081,9 +1123,348 @@ footer {
   }
 }
 
+/* ======================================
+   スマホ専用 UI（480px 以下）
+====================================== */
+@media (max-width: 480px) {
+
+  /* --- アプリ感・全体レイアウト --- */
+  body {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  main {
+    padding: 10px 8px 48px;
+    gap: 10px;
+  }
+
+  section {
+    padding: 16px 14px;
+    border-radius: 14px;
+  }
+
+  /* --- ヘッダー --- */
+  .header-inner {
+    padding: 0;
+  }
+
+  .header-logo {
+    font-size: 1.05rem;
+  }
+
+  .header-rank-pill {
+    padding: 5px 10px;
+    font-size: 0.72rem;
+    gap: 4px;
+  }
+
+  /* --- ヒーローパネル --- */
+  .hero-section {
+    border-radius: 14px;
+  }
+
+  .hero-block {
+    padding: 18px 12px;
+    gap: 4px;
+  }
+
+  .hero-sep {
+    margin: 0 10px;
+  }
+
+  /* ランク */
+  .rank-diamond {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+  }
+
+  .rank-diamond-inner {
+    font-size: 1.55rem;
+  }
+
+  .rank-name-lg {
+    font-size: 1.2rem;
+  }
+
+  .rank-label-sm {
+    font-size: 0.6rem;
+  }
+
+  .rank-session-count {
+    font-size: 0.7rem;
+  }
+
+  .xp-label {
+    font-size: 0.62rem;
+  }
+
+  /* ストリーク */
+  .streak-fire {
+    font-size: 1.6rem;
+  }
+
+  .streak-big-num {
+    font-size: 2.6rem;
+  }
+
+  .streak-unit {
+    font-size: 0.9rem;
+  }
+
+  .streak-title {
+    font-size: 0.62rem;
+  }
+
+  .streak-msg {
+    font-size: 0.72rem;
+  }
+
+  .cal-dot {
+    width: 9px;
+    height: 9px;
+  }
+
+  .week-dots {
+    gap: 5px;
+  }
+
+  /* リング */
+  .ring-wrap {
+    width: 78px;
+    height: 78px;
+  }
+
+  .progress-ring {
+    width: 78px;
+    height: 78px;
+  }
+
+  .ring-pct {
+    font-size: 1rem;
+  }
+
+  .weekly-detail-label {
+    font-size: 0.72rem;
+  }
+
+  /* --- スタッツカード（3列維持・コンパクト） --- */
+  .stats-section {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .stat-card {
+    padding: 12px 8px 10px;
+  }
+
+  .stat-icon {
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-size: 1.35rem;
+  }
+
+  .stat-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* --- 折りたたみ：モバイルでは矢印を表示・クリックで開閉 --- */
+  .collapse-arrow {
+    display: inline-block;
+  }
+
+  .collapsible-section details > summary {
+    padding: 2px 0;
+  }
+
+  .collapsible-section details[open] > summary {
+    margin-bottom: 14px;
+  }
+
+  /* --- 部位選択グリッド（4列 × 2行、大きなタップ目標） --- */
+  .bp-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .bp-btn {
+    aspect-ratio: unset;
+    min-height: 60px;
+    font-size: 0.72rem;
+    padding: 8px 4px;
+    border-radius: 10px;
+    gap: 4px;
+  }
+
+  /* --- フォーム入力（iOS zoom 防止 + 大きなタップ目標） --- */
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: 16px;   /* 16px 未満だと iOS がズームする */
+    min-height: 48px;
+    padding: 12px 14px;
+    border-radius: 10px;
+  }
+
+  .form-group textarea {
+    min-height: 72px;
+  }
+
+  .form-step-label {
+    font-size: 0.65rem;
+    margin: 14px 0 8px;
+    padding: 0;
+  }
+
+  .form-row {
+    gap: 8px;
+  }
+
+  .form-row.three-col {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .form-group {
+    gap: 5px;
+    margin-bottom: 8px;
+  }
+
+  .form-group label {
+    font-size: 0.72rem;
+  }
+
+  /* ボリュームプレビュー */
+  .volume-preview {
+    font-size: 0.78rem;
+    padding: 8px 12px;
+  }
+
+  /* プリセットチップ */
+  .preset-chips {
+    gap: 6px;
+  }
+
+  /* --- 追加ボタン（大きく、押しやすく） --- */
+  .btn-add {
+    min-height: 54px;
+    font-size: 1.05rem;
+    padding: 16px;
+    border-radius: 12px;
+    letter-spacing: 0.04em;
+  }
+
+  /* --- フィルター行 --- */
+  .filter-row {
+    font-size: 0.78rem;
+    gap: 8px;
+  }
+
+  .filter-row select {
+    font-size: 14px;
+    min-height: 40px;
+    padding: 6px 10px;
+  }
+
+  /* --- テーブル横スクロール（既存だが明示的に確保） --- */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  #workoutTable {
+    min-width: 580px;
+    font-size: 0.78rem;
+  }
+
+  th {
+    padding: 8px 10px;
+    font-size: 0.65rem;
+  }
+
+  td {
+    padding: 8px 10px;
+  }
+
+  .btn-delete {
+    padding: 5px 10px;
+    font-size: 0.72rem;
+    min-height: 32px;
+  }
+
+  /* --- 一覧ヘッダー --- */
+  .list-header h2 {
+    font-size: 0.82rem;
+  }
+
+  .btn-clear {
+    min-height: 36px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
+
+  /* --- セクション h2 --- */
+  section h2 {
+    font-size: 0.82rem;
+    margin-bottom: 14px;
+  }
+
+  /* --- グラフコントロール --- */
+  .graph-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .graph-controls select {
+    width: 100%;
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  /* --- トースト --- */
+  .toast {
+    font-size: 0.8rem;
+    padding: 11px 18px;
+    white-space: normal;
+    text-align: center;
+    border-radius: 14px;
+    max-width: 88vw;
+    bottom: max(20px, env(safe-area-inset-bottom, 20px));
+  }
+}
+
+  /* --- チュートリアルカード --- */
+  .tut-card {
+    padding: 24px 18px 20px;
+    border-radius: 18px;
+  }
+
+  .tut-icon-circle {
+    width: 66px;
+    height: 66px;
+  }
+
+  .tut-icon {
+    font-size: 1.85rem;
+  }
+
+  .tut-title {
+    font-size: 1rem;
+  }
+
+  .tut-desc {
+    font-size: 0.83rem;
+  }
+}
+
 @media (max-width: 380px) {
-  .bp-grid { grid-template-columns: repeat(4, 1fr); }
-  .form-row.three-col { grid-template-columns: 1fr; }
+  .form-row.three-col { grid-template-columns: 1fr 1fr; }
+  .streak-big-num { font-size: 2.2rem; }
 }
 
 /* ======================================
@@ -1374,23 +1755,4 @@ footer {
   box-shadow: 0 6px 24px rgba(255, 215, 64, 0.5);
 }
 
-/* スマホ対応 */
-@media (max-width: 480px) {
-  .tut-card {
-    padding: 26px 20px 22px;
-    border-radius: 18px;
-  }
-
-  .tut-icon-circle {
-    width: 68px;
-    height: 68px;
-  }
-
-  .tut-icon {
-    font-size: 1.9rem;
-  }
-
-  .tut-title {
-    font-size: 1rem;
-  }
-}
+/* スマホ対応はメインの @media (max-width: 480px) ブロックに統合 */

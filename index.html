@@ -2,7 +2,10 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0b0b14" />
   <title>IRON LOG — 筋トレ管理ツール</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -133,28 +136,38 @@
     <!-- ==============================
          種目ごとの最高重量
     ================================= -->
-    <section class="max-weight-section">
-      <h2>🏆 種目ごとの最高重量</h2>
-      <div id="maxWeightList" class="max-weight-list">
-        <p class="empty-msg">記録がまだありません</p>
-      </div>
+    <section class="max-weight-section collapsible-section">
+      <details open>
+        <summary class="section-summary">
+          <h2>🏆 種目ごとの最高重量</h2>
+          <span class="collapse-arrow" aria-hidden="true">▲</span>
+        </summary>
+        <div id="maxWeightList" class="max-weight-list">
+          <p class="empty-msg">記録がまだありません</p>
+        </div>
+      </details>
     </section>
 
     <!-- ==============================
          重量の伸びグラフ
     ================================= -->
-    <section class="graph-section">
-      <h2>📈 重量の伸びグラフ</h2>
-      <div class="graph-controls">
-        <label for="graphExercise">種目を選択：</label>
-        <select id="graphExercise">
-          <option value="">-- 種目を選択してください --</option>
-        </select>
-      </div>
-      <div class="canvas-wrapper">
-        <canvas id="weightGraph"></canvas>
-        <p class="graph-empty-msg" id="graphEmptyMsg">種目を選択するとグラフが表示されます</p>
-      </div>
+    <section class="graph-section collapsible-section">
+      <details open>
+        <summary class="section-summary">
+          <h2>📈 重量の伸びグラフ</h2>
+          <span class="collapse-arrow" aria-hidden="true">▲</span>
+        </summary>
+        <div class="graph-controls">
+          <label for="graphExercise">種目を選択：</label>
+          <select id="graphExercise">
+            <option value="">-- 種目を選択してください --</option>
+          </select>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="weightGraph"></canvas>
+          <p class="graph-empty-msg" id="graphEmptyMsg">種目を選択するとグラフが表示されます</p>
+        </div>
+      </details>
     </section>
 
     <!-- ==============================
