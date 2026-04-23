@@ -107,10 +107,69 @@ document.addEventListener('DOMContentLoaded', function () {
   if (savedGoal) document.getElementById('weeklyGoalInput').value = savedGoal;
 
   initBodyVisual();
+  initBodyPanelToggle();
   renderAll();
   initTutorial();
   initBeacons();
 });
+
+// ======================================
+// モバイル：ボディパネル折りたたみトグル
+// ======================================
+function initBodyPanelToggle() {
+  var header     = document.getElementById('bodyPanelHeader');
+  var collapsible = document.getElementById('bodyPanelCollapsible');
+  var arrow      = document.getElementById('bodyToggleArrow');
+  if (!header || !collapsible || !arrow) return;
+
+  // PC（481px以上）では常時展開
+  function isMobileView() {
+    return window.innerWidth <= 480;
+  }
+
+  function applyInitialState() {
+    if (isMobileView()) {
+      // モバイル：デフォルトで折りたたみ
+      collapsible.classList.remove('expanded');
+      arrow.classList.remove('open');
+      header.setAttribute('aria-expanded', 'false');
+    } else {
+      // PC：常時展開、トグル不要
+      collapsible.classList.add('expanded');
+      collapsible.style.display = '';
+    }
+  }
+
+  applyInitialState();
+
+  header.addEventListener('click', function () {
+    if (!isMobileView()) return;
+    var isOpen = collapsible.classList.contains('expanded');
+    if (isOpen) {
+      collapsible.classList.remove('expanded');
+      arrow.classList.remove('open');
+      header.setAttribute('aria-expanded', 'false');
+    } else {
+      collapsible.classList.add('expanded');
+      arrow.classList.add('open');
+      header.setAttribute('aria-expanded', 'true');
+      // 展開時にスキャンアニメを1回走らせる
+      triggerScanAnimation();
+    }
+  });
+
+  header.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      header.click();
+    }
+  });
+
+  // 画面リサイズ時にリセット
+  window.addEventListener('resize', function () {
+    applyInitialState();
+  });
+}
 
 function renderAll() {
   renderTable();
@@ -231,9 +290,10 @@ function initBodyVisual() {
   triggerScanAnimation();
 }
 
-// スキャンアニメーションを強制リスタート
+// スキャンアニメーションを強制リスタート（モバイルではスキップ）
 function triggerScanAnimation() {
-  const sweep = document.getElementById('scanSweep');
+  if (window.innerWidth <= 480) return;
+  var sweep = document.getElementById('scanSweep');
   if (!sweep) return;
   sweep.style.animation = 'none';
   void sweep.offsetWidth;

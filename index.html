@@ -41,11 +41,16 @@
   <!-- ===== 左カラム：ボディビジュアル ===== -->
   <aside class="col-left">
     <div class="panel body-panel">
-      <div class="panel-header">
+      <!-- パネルヘッダー（モバイルでは折りたたみトグル） -->
+      <div class="panel-header" id="bodyPanelHeader" role="button" tabindex="0" aria-expanded="false">
         <span class="panel-dot"></span>
         BODY SCAN
         <span class="panel-status" id="scanStatus">ONLINE</span>
+        <span class="body-panel-toggle-arrow" id="bodyToggleArrow" aria-hidden="true">▼</span>
       </div>
+
+      <!-- 折りたたみコンテンツ（スキャン+アップロード） -->
+      <div class="body-panel-collapsible" id="bodyPanelCollapsible">
 
       <!-- スキャンコンテナ -->
       <div class="scan-container" id="scanContainer">
@@ -172,7 +177,9 @@
         <button class="btn-remove-photo" id="removePhoto" style="display:none;">✕ 削除</button>
       </div>
 
-      <!-- 筋肉グループステータス -->
+      </div><!-- /.body-panel-collapsible -->
+
+      <!-- 筋肉グループステータス（常時表示） -->
       <div class="muscle-header">
         <span class="panel-dot small"></span>
         MUSCLE STATUS <span class="muscle-period">/ 直近7日</span>
