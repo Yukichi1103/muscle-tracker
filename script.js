@@ -1,9 +1,5 @@
 // ======================================
-// IRON LOG — 筋トレ管理ツール
-// ======================================
-
-// ======================================
-// 定数・設定
+// IRON LOG — SYSTEM v2.0
 // ======================================
 
 const STORAGE_KEY         = 'ironLogRecords';
@@ -11,8 +7,8 @@ const WEEKLY_GOAL_KEY     = 'ironLogWeeklyGoal';
 const LAST_RANK_KEY       = 'ironLogLastRank';
 const LAST_STREAK_KEY     = 'ironLogLastStreak';
 const WEEKLY_NOTIFIED_KEY = 'ironLogWeeklyNotified';
+const BODY_PHOTO_KEY      = 'ironLogBodyPhoto';
 
-// ランク定義（min: 何回以上でこのランク）
 const RANKS = [
   { min: 0,   label: 'ルーキー',   icon: '🌱', color: '#78909c' },
   { min: 5,   label: 'トレーニー', icon: '💪', color: '#66bb6a' },
@@ -22,10 +18,8 @@ const RANKS = [
   { min: 200, label: 'レジェンド', icon: '🏆', color: '#ef5350' },
 ];
 
-// 連続日数マイルストーン
 const STREAK_MILESTONES = [3, 7, 14, 21, 30, 60, 100];
 
-// 部位ごとのおすすめ種目プリセット
 const EXERCISE_PRESETS = {
   '胸': [
     { name: 'ベンチプレス',      desc: '大胸筋の王道種目。バーベルを胸まで下げて押し上げる。まずこれをマスターしよう。' },
@@ -79,9 +73,8 @@ const EXERCISE_PRESETS = {
 };
 
 // ======================================
-// トースト通知（キュー方式）
+// トースト通知
 // ======================================
-
 const toastQueue = [];
 let toastRunning = false;
 
@@ -110,20 +103,15 @@ function processToastQueue() {
 document.addEventListener('DOMContentLoaded', function () {
   setTodayDate();
 
-  // 保存済みの週の目標を読み込む
   const savedGoal = localStorage.getItem(WEEKLY_GOAL_KEY);
   if (savedGoal) document.getElementById('weeklyGoalInput').value = savedGoal;
 
+  initBodyVisual();
   renderAll();
-
-  // チュートリアル（初回のみ自動表示）
   initTutorial();
-
-  // フォームステップラベルのビーコン（初回のみ点灯）
   initBeacons();
 });
 
-// 全パーツを一括再描画する関数
 function renderAll() {
   renderTable();
   updateHero();
@@ -132,6 +120,7 @@ function renderAll() {
   updateMaxWeights();
   updateGraphSelector();
   renderGraph(document.getElementById('graphExercise').value);
+  updateMuscleHighlights();
 }
 
 // ======================================
@@ -145,14 +134,13 @@ function setTodayDate() {
   document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
 }
 
-// 今日の日付を YYYY-MM-DD で返す
 function todayStr() {
   const t = new Date();
   return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
 }
 
 // ======================================
-// localStorage の読み書き
+// localStorage 読み書き
 // ======================================
 function getRecords() {
   const data = localStorage.getItem(STORAGE_KEY);
@@ -161,6 +149,179 @@ function getRecords() {
 
 function saveRecords(records) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+// ======================================
+// ボディビジュアル初期化
+// ======================================
+function initBodyVisual() {
+  const photoUpload   = document.getElementById('photoUpload');
+  const bodyPhoto     = document.getElementById('bodyPhoto');
+  const photoPlaceholder = document.getElementById('photoPlaceholder');
+  const removeBtn     = document.getElementById('removePhoto');
+  const uploadBtnText = document.getElementById('uploadBtnText');
+
+  // 保存済み写真を読み込む
+  const savedPhoto = localStorage.getItem(BODY_PHOTO_KEY);
+  if (savedPhoto) {
+    bodyPhoto.src = savedPhoto;
+    bodyPhoto.style.display = 'block';
+    photoPlaceholder.style.display = 'none';
+    removeBtn.style.display = 'block';
+    if (uploadBtnText) uploadBtnText.textContent = '写真を変更';
+  }
+
+  // 写真アップロード処理
+  photoUpload.addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (ev) {
+      const img = new Image();
+      img.onload = function () {
+        // 最大320×480にリサイズしてJPEG圧縮
+        const canvas = document.createElement('canvas');
+        const maxW = 320, maxH = 480;
+        let w = img.width, h = img.height;
+        if (w > maxW || h > maxH) {
+          const ratio = Math.min(maxW / w, maxH / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+
+        bodyPhoto.src = dataUrl;
+        bodyPhoto.style.display = 'block';
+        photoPlaceholder.style.display = 'none';
+        removeBtn.style.display = 'block';
+        if (uploadBtnText) uploadBtnText.textContent = '写真を変更';
+
+        try {
+          localStorage.setItem(BODY_PHOTO_KEY, dataUrl);
+        } catch (err) {
+          showToast('⚠️', '写真の保存に失敗しました（容量不足）');
+        }
+
+        triggerScanAnimation();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    // 同じファイルを再選択できるようにリセット
+    e.target.value = '';
+  });
+
+  // 写真削除
+  if (removeBtn) {
+    removeBtn.addEventListener('click', function () {
+      bodyPhoto.src = '';
+      bodyPhoto.style.display = 'none';
+      photoPlaceholder.style.display = 'block';
+      removeBtn.style.display = 'none';
+      if (uploadBtnText) uploadBtnText.textContent = '写真をアップロード';
+      localStorage.removeItem(BODY_PHOTO_KEY);
+    });
+  }
+
+  // 初期スキャンアニメーションを起動
+  triggerScanAnimation();
+}
+
+// スキャンアニメーションを強制リスタート
+function triggerScanAnimation() {
+  const sweep = document.getElementById('scanSweep');
+  if (!sweep) return;
+  sweep.style.animation = 'none';
+  void sweep.offsetWidth;
+  sweep.style.animation = '';
+}
+
+// ======================================
+// 筋肉グループハイライト更新
+// ======================================
+function updateMuscleHighlights() {
+  const records = getRecords();
+
+  // 直近7日のトレーニング部位を収集
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 7);
+  const cutoffStr = cutoff.toISOString().slice(0, 10);
+
+  const recentParts = new Set(
+    records
+      .filter(function (r) { return r.date >= cutoffStr; })
+      .map(function (r) { return r.bodyPart; })
+  );
+
+  // 全ワイヤーフレーム要素をリセット
+  document.querySelectorAll('.wf-muscle').forEach(function (el) {
+    el.classList.remove('trained');
+  });
+
+  // トレーニング済み部位をハイライト
+  document.querySelectorAll('.wf-muscle[data-part]').forEach(function (el) {
+    if (recentParts.has(el.dataset.part)) {
+      el.classList.add('trained');
+    }
+  });
+
+  // スキャンステータス更新
+  const scanStatus = document.getElementById('scanStatus');
+  if (scanStatus) {
+    scanStatus.textContent = recentParts.size > 0 ? 'ACTIVE' : 'ONLINE';
+    scanStatus.style.color = recentParts.size > 0 ? '#00ff88' : '';
+  }
+
+  // 筋肉ステータスリスト更新
+  updateMuscleStatusList(recentParts);
+}
+
+function updateMuscleStatusList(activeParts) {
+  const container = document.getElementById('muscleGroupStatus');
+  if (!container) return;
+
+  const allParts = ['胸', '背中', '肩', '腕', '脚', '腹', '全身'];
+  container.innerHTML = allParts.map(function (part) {
+    const active = activeParts.has(part);
+    return `<div class="muscle-status-item ${active ? 'active' : ''}">
+      <span class="muscle-dot ${active ? 'on' : 'off'}"></span>
+      <span class="muscle-name">${part}</span>
+      ${active ? '<span class="muscle-tag">ON</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+// ======================================
+// 数値フェードインアニメーション
+// ======================================
+function animateStatValue(element, targetValue, suffix) {
+  suffix = suffix || '';
+  const duration = 650;
+  const startTime = performance.now();
+
+  element.classList.remove('revealing');
+  void element.offsetWidth;
+  element.classList.add('revealing');
+
+  function update(currentTime) {
+    const elapsed  = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased    = 1 - Math.pow(1 - progress, 3);
+    const current  = Math.round(targetValue * eased);
+    element.textContent = current.toLocaleString() + suffix;
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    } else {
+      element.textContent = targetValue.toLocaleString() + suffix;
+      element.classList.remove('revealing');
+    }
+  }
+
+  requestAnimationFrame(update);
 }
 
 // ======================================
@@ -178,9 +339,9 @@ function updateVolumePreview() {
 
   if (weight > 0 && reps > 0 && sets > 0) {
     const vol = weight * reps * sets;
-    preview.textContent = `ボリューム: ${vol.toLocaleString()} kg　（${weight} × ${reps} × ${sets}）`;
+    preview.textContent = `VOLUME: ${vol.toLocaleString()} kg　（${weight} × ${reps} × ${sets}）`;
   } else {
-    preview.textContent = 'ボリューム: -- kg　（重量 × 回数 × セット数）';
+    preview.textContent = 'VOLUME: -- kg　（重量 × 回数 × セット数）';
   }
 }
 
@@ -191,17 +352,10 @@ document.getElementById('bpGrid').addEventListener('click', function (e) {
   const btn = e.target.closest('.bp-btn');
   if (!btn) return;
 
-  // 選択状態を切り替える
   document.querySelectorAll('.bp-btn').forEach(function (b) { b.classList.remove('selected'); });
   btn.classList.add('selected');
-
-  // 隠しフィールドに値をセット
   document.getElementById('bodyPart').value = btn.dataset.part;
-
-  // エラーメッセージを消す
   document.getElementById('bpError').style.display = 'none';
-
-  // プリセット種目を表示
   updatePresetChips(btn.dataset.part);
 });
 
@@ -223,7 +377,6 @@ function updatePresetChips(bodyPart) {
   }).join('');
 }
 
-// プリセットチップのクリック
 document.getElementById('presetChips').addEventListener('click', function (e) {
   const chip = e.target.closest('.preset-chip');
   if (!chip) return;
@@ -239,7 +392,6 @@ document.getElementById('presetChips').addEventListener('click', function (e) {
 document.getElementById('workoutForm').addEventListener('submit', function (e) {
   e.preventDefault();
 
-  // 部位のバリデーション（隠しフィールド）
   const bodyPart = document.getElementById('bodyPart').value;
   if (!bodyPart) {
     document.getElementById('bpError').style.display = 'block';
@@ -265,17 +417,18 @@ document.getElementById('workoutForm').addEventListener('submit', function (e) {
   records.unshift(newRecord);
   saveRecords(records);
 
-  // 達成チェック
   checkAchievements(records);
 
-  // フォームリセット
   const savedDate = date;
   document.getElementById('workoutForm').reset();
   document.getElementById('date').value = savedDate;
-  document.getElementById('volumePreview').textContent = 'ボリューム: -- kg　（重量 × 回数 × セット数）';
+  document.getElementById('volumePreview').textContent = 'VOLUME: -- kg　（重量 × 回数 × セット数）';
   document.getElementById('presetArea').style.display = 'none';
   document.querySelectorAll('.bp-btn').forEach(function (b) { b.classList.remove('selected'); });
   document.getElementById('bodyPart').value = '';
+
+  // 記録後にスキャンアニメーション再起動
+  triggerScanAnimation();
 
   renderAll();
 });
@@ -289,7 +442,6 @@ function checkAchievements(records) {
   const curRank    = getRank(total);
   const weekly     = calcWeeklyAchievement(records);
 
-  // 連続日数マイルストーン
   const prevStreak = parseInt(localStorage.getItem(LAST_STREAK_KEY)) || 0;
   STREAK_MILESTONES.forEach(function (m) {
     if (prevStreak < m && streak >= m) {
@@ -298,14 +450,12 @@ function checkAchievements(records) {
   });
   localStorage.setItem(LAST_STREAK_KEY, streak);
 
-  // ランクアップ
   const prevRankLabel = localStorage.getItem(LAST_RANK_KEY) || '';
   if (prevRankLabel && prevRankLabel !== curRank.label) {
     showToast(curRank.icon, `ランクアップ！「${curRank.label}」に昇格！`);
   }
   localStorage.setItem(LAST_RANK_KEY, curRank.label);
 
-  // 週の目標達成（同じ週に1回だけ）
   const weekStr      = getCurrentWeekStr();
   const lastNotified = localStorage.getItem(WEEKLY_NOTIFIED_KEY) || '';
   if (weekly.rate >= 100 && lastNotified !== weekStr) {
@@ -360,7 +510,6 @@ function renderTable() {
   });
 }
 
-// 前回比 HTML を組み立てる
 function buildDiffHtml(allRecords, current) {
   const idx  = allRecords.findIndex(function (r) { return r.id === current.id; });
   if (idx === -1) return '<span class="diff-none">--</span>';
@@ -411,15 +560,12 @@ function updateHero() {
   const streak  = calcStreak(records);
   const weekly  = calcWeeklyAchievement(records);
 
-  // --- ストリーク ---
   document.getElementById('streakBigNum').textContent = streak;
   document.getElementById('streakMsg').textContent    = buildStreakMessage(streak);
 
-  // 週カレンダードット
   renderWeekDots(records);
 
-  // --- 週の達成率リング ---
-  const circumference = 226; // 2π × 36
+  const circumference = 226;
   const offset        = circumference - (weekly.rate / 100) * circumference;
   const ring          = document.getElementById('ringProg');
   ring.style.strokeDashoffset = offset;
@@ -429,14 +575,13 @@ function updateHero() {
   document.getElementById('weeklyDetailLabel').textContent = weekly.achieved + ' / ' + weekly.goal + ' 日達成';
 }
 
-// 週カレンダードットを描画する
 function renderWeekDots(records) {
-  const container    = document.getElementById('weekDots');
+  const container = document.getElementById('weekDots');
   if (!container) return;
 
   const trainedDates = new Set(records.map(function (r) { return r.date; }));
   const today        = new Date();
-  const dow          = today.getDay(); // 0=日
+  const dow          = today.getDay();
   const monday       = new Date(today);
   monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
 
@@ -468,16 +613,29 @@ function renderWeekDots(records) {
 }
 
 // ======================================
-// スタッツカード（3 枚）を更新する
+// スタッツカード（3枚）を更新する
 // ======================================
 function updateStats() {
   const records  = getRecords();
   const totalVol = records.reduce(function (s, r) { return s + r.volume; }, 0);
   const bwRecord = records.find(function (r) { return r.bodyWeight !== null; });
 
-  document.getElementById('totalCount').textContent  = records.length.toLocaleString();
-  document.getElementById('totalVolume').textContent = totalVol.toLocaleString();
-  document.getElementById('latestWeight').textContent = bwRecord ? bwRecord.bodyWeight : '--';
+  const totalCountEl  = document.getElementById('totalCount');
+  const totalVolumeEl = document.getElementById('totalVolume');
+  const latestWeightEl = document.getElementById('latestWeight');
+
+  animateStatValue(totalCountEl, records.length);
+  animateStatValue(totalVolumeEl, totalVol);
+
+  if (bwRecord) {
+    latestWeightEl.textContent = bwRecord.bodyWeight;
+    latestWeightEl.classList.remove('revealing');
+    void latestWeightEl.offsetWidth;
+    latestWeightEl.classList.add('revealing');
+    setTimeout(function () { latestWeightEl.classList.remove('revealing'); }, 700);
+  } else {
+    latestWeightEl.textContent = '--';
+  }
 }
 
 // ======================================
@@ -487,7 +645,6 @@ function updateRankDisplay() {
   const records  = getRecords();
   const total    = records.length;
 
-  // 現在のランクインデックスを求める
   let rankIdx = 0;
   for (let i = 0; i < RANKS.length; i++) {
     if (total >= RANKS[i].min) rankIdx = i;
@@ -495,30 +652,25 @@ function updateRankDisplay() {
   const curRank  = RANKS[rankIdx];
   const nextRank = RANKS[rankIdx + 1] || null;
 
-  // XP バー（現ランク内での進捗）
   let xpPct = 100;
   if (nextRank) {
     xpPct = Math.min(100, ((total - curRank.min) / (nextRank.min - curRank.min)) * 100);
   }
 
-  // ヘッダーピル
   document.getElementById('headerRankIcon').textContent = curRank.icon;
   document.getElementById('headerRankName').textContent = curRank.label;
 
-  // ヒーローブロック
-  document.getElementById('rankDiamondIcon').textContent = curRank.icon;
-  document.getElementById('rankNameLg').textContent      = curRank.label;
+  document.getElementById('rankDiamondIcon').textContent  = curRank.icon;
+  document.getElementById('rankNameLg').textContent       = curRank.label;
   document.getElementById('rankSessionCount').textContent = total + ' 回';
-  document.getElementById('xpBar').style.width           = xpPct + '%';
-  document.getElementById('xpLabel').textContent         = nextRank
+  document.getElementById('xpBar').style.width            = xpPct + '%';
+  document.getElementById('xpLabel').textContent          = nextRank
     ? `次「${nextRank.label}」まで あと ${nextRank.min - total} 回`
     : '最高ランク達成！あなたは伝説！';
 
-  // ランク一覧ピル
   renderMilestonePills(curRank, total);
 }
 
-// ランク一覧ピルを描画する
 function renderMilestonePills(curRank, total) {
   const wrap = document.getElementById('milestonePills');
   if (!wrap) return;
@@ -533,9 +685,6 @@ function renderMilestonePills(curRank, total) {
   }).join('');
 }
 
-// ======================================
-// ランクを返すユーティリティ
-// ======================================
 function getRank(total) {
   let rank = RANKS[0];
   RANKS.forEach(function (r) { if (total >= r.min) rank = r; });
@@ -560,7 +709,6 @@ function calcStreak(records) {
   return streak;
 }
 
-// 連続日数に応じたメッセージ
 function buildStreakMessage(streak) {
   if (streak === 0) return '今日もジムへ行こう！';
   if (streak === 1) return '今日もよくやった！';
@@ -635,7 +783,7 @@ function updateGraphSelector() {
     if (!exercises.includes(r.exerciseName)) exercises.push(r.exerciseName);
   });
 
-  sel.innerHTML = '<option value="">-- 種目を選択してください --</option>';
+  sel.innerHTML = '<option value="">-- 種目を選択 --</option>';
   exercises.forEach(function (name) {
     const opt = document.createElement('option');
     opt.value = opt.textContent = name;
@@ -654,7 +802,7 @@ window.addEventListener('resize', function () {
 });
 
 // ======================================
-// 重量の伸びグラフ（Canvas）
+// 重量の伸びグラフ（Canvas / ホログラム配色）
 // ======================================
 function renderGraph(exerciseName) {
   const canvas   = document.getElementById('weightGraph');
@@ -662,7 +810,7 @@ function renderGraph(exerciseName) {
   const ctx      = canvas.getContext('2d');
 
   canvas.width  = canvas.parentElement.clientWidth;
-  canvas.height = 280;
+  canvas.height = 260;
 
   if (!exerciseName) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -679,11 +827,11 @@ function renderGraph(exerciseName) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     canvas.style.display   = 'block';
     emptyMsg.style.display = 'none';
-    ctx.fillStyle    = '#606088';
-    ctx.font         = '14px sans-serif';
+    ctx.fillStyle    = 'rgba(0, 180, 255, 0.4)';
+    ctx.font         = '13px "Courier New", monospace';
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('グラフには 2件以上の記録が必要です', canvas.width / 2, canvas.height / 2);
+    ctx.fillText('2件以上の記録が必要です', canvas.width / 2, canvas.height / 2);
     return;
   }
 
@@ -691,7 +839,7 @@ function renderGraph(exerciseName) {
   emptyMsg.style.display = 'none';
 
   const W = canvas.width, H = canvas.height;
-  const pL = 58, pR = 24, pT = 36, pB = 52;
+  const pL = 56, pR = 24, pT = 36, pB = 52;
   const cW = W - pL - pR, cH = H - pT - pB;
 
   const weights = data.map(function (d) { return d.weight; });
@@ -706,25 +854,26 @@ function renderGraph(exerciseName) {
 
   // 背景
   ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = '#111124';
+  ctx.fillStyle = '#020c1b';
   ctx.fillRect(0, 0, W, H);
 
-  // グリッドと Y ラベル
-  ctx.setLineDash([3, 5]);
+  // グリッドライン
+  ctx.setLineDash([2, 4]);
   ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
     const y   = pT + (i / 4) * cH;
     const val = yMax - (i / 4) * (yMax - yMin);
-    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.strokeStyle = 'rgba(0, 212, 255, 0.08)';
     ctx.beginPath(); ctx.moveTo(pL, y); ctx.lineTo(pL + cW, y); ctx.stroke();
-    ctx.fillStyle = '#606088'; ctx.font = '11px sans-serif';
+    ctx.fillStyle = 'rgba(0, 180, 255, 0.45)';
+    ctx.font = '10px "Courier New", monospace';
     ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-    ctx.fillText(val.toFixed(1), pL - 8, y);
+    ctx.fillText(val.toFixed(1), pL - 7, y);
   }
   ctx.setLineDash([]);
 
   // 軸線
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.strokeStyle = 'rgba(0, 212, 255, 0.12)';
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(pL, pT); ctx.lineTo(pL, pT + cH); ctx.lineTo(pL + cW, pT + cH);
@@ -732,8 +881,8 @@ function renderGraph(exerciseName) {
 
   // グラデーション塗りつぶし
   const grad = ctx.createLinearGradient(0, pT, 0, pT + cH);
-  grad.addColorStop(0, 'rgba(124, 106, 255, 0.22)');
-  grad.addColorStop(1, 'rgba(124, 106, 255, 0)');
+  grad.addColorStop(0, 'rgba(0, 212, 255, 0.2)');
+  grad.addColorStop(1, 'rgba(0, 212, 255, 0)');
 
   ctx.beginPath();
   data.forEach(function (d, i) {
@@ -746,34 +895,46 @@ function renderGraph(exerciseName) {
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // 折れ線
-  ctx.strokeStyle = '#7c6aff';
-  ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+  // 折れ線（グロー）
+  ctx.shadowColor = '#00d4ff';
+  ctx.shadowBlur  = 10;
+  ctx.strokeStyle = '#00d4ff';
+  ctx.lineWidth   = 2.2;
+  ctx.lineJoin    = 'round';
   ctx.beginPath();
   data.forEach(function (d, i) {
     const x = toX(i), y = toY(d.weight);
     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
   });
   ctx.stroke();
+  ctx.shadowBlur = 0;
 
   // データポイント・ラベル
   data.forEach(function (d, i) {
     const x = toX(i), y = toY(d.weight);
 
-    ctx.shadowColor = '#7c6aff'; ctx.shadowBlur = 10;
-    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2);
-    ctx.fillStyle = '#7c6aff'; ctx.fill();
-    ctx.strokeStyle = '#0b0b14'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.shadowBlur = 0;
+    ctx.shadowColor = '#00d4ff';
+    ctx.shadowBlur  = 12;
+    ctx.beginPath();
+    ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+    ctx.fillStyle   = '#00d4ff';
+    ctx.fill();
+    ctx.shadowBlur  = 0;
+    ctx.strokeStyle = '#020c1b';
+    ctx.lineWidth   = 2;
+    ctx.stroke();
 
-    ctx.fillStyle = '#e4e4f4'; ctx.font = 'bold 11px sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText(d.weight + 'kg', x, y - 9);
+    ctx.fillStyle    = '#c8e8ff';
+    ctx.font         = 'bold 10px "Courier New", monospace';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(d.weight + 'kg', x, y - 8);
 
-    ctx.fillStyle = '#606088'; ctx.font = '10px sans-serif';
+    ctx.fillStyle    = 'rgba(0, 180, 255, 0.5)';
+    ctx.font         = '9px "Courier New", monospace';
     ctx.textBaseline = 'top';
     ctx.save();
-    ctx.translate(x, pT + cH + 8);
+    ctx.translate(x, pT + cH + 7);
     ctx.rotate(-Math.PI / 5);
     ctx.fillText(d.date.slice(5).replace('-', '/'), 0, 0);
     ctx.restore();
@@ -783,7 +944,6 @@ function renderGraph(exerciseName) {
 // ======================================
 // ユーティリティ
 // ======================================
-
 function formatDate(dateStr) { return dateStr.replace(/-/g, '/'); }
 
 function escapeHtml(str) {
@@ -799,39 +959,36 @@ function escapeHtml(str) {
 // ======================================
 // チュートリアル
 // ======================================
-
-// localStorage のキー
 const TUT_DONE_KEY = 'ironLogTutorialDone';
 
-// ステップ定義（4ステップ）
 const TUT_STEPS = [
   {
     icon:      '📅',
-    iconColor: 'rgba(58, 134, 255, 0.15)',
-    iconBorder:'rgba(58, 134, 255, 0.3)',
+    iconColor: 'rgba(0, 100, 255, 0.12)',
+    iconBorder:'rgba(0, 212, 255, 0.3)',
     title:     'まず日付と体重を入力',
     desc:      '今日の<b>日付</b>は自動でセットされています。<br><b>体重</b>も入力しておくと、日々の変化を追えます（任意）。',
     hint:      '↓ フォームの「STEP 1」セクション',
   },
   {
     icon:      '💪',
-    iconColor: 'rgba(255, 112, 67, 0.15)',
-    iconBorder:'rgba(255, 112, 67, 0.3)',
+    iconColor: 'rgba(255, 112, 67, 0.12)',
+    iconBorder:'rgba(255, 136, 68, 0.3)',
     title:     '鍛えた部位をタップして選ぶ',
     desc:      '<b>8つのボタン</b>から今日の部位を選ぶだけ。<br>選ぶと、その部位の<b>おすすめ種目</b>が自動で表示されます！',
     hint:      '↓ フォームの「STEP 2」セクション',
   },
   {
     icon:      '🏋️',
-    iconColor: 'rgba(46, 204, 113, 0.15)',
-    iconBorder:'rgba(46, 204, 113, 0.3)',
+    iconColor: 'rgba(0, 255, 136, 0.1)',
+    iconBorder:'rgba(0, 255, 136, 0.3)',
     title:     '種目名と重量を記録する',
     desc:      'おすすめ種目をタップするか、直接入力してください。<br><b>重量・回数・セット数</b>を入れると<b>ボリュームが自動計算</b>されます。',
     hint:      '↓ フォームの「STEP 3・4」セクション',
   },
   {
     icon:      '✅',
-    iconColor: 'rgba(255, 215, 64, 0.15)',
+    iconColor: 'rgba(255, 215, 64, 0.1)',
     iconBorder:'rgba(255, 215, 64, 0.3)',
     title:     '記録ボタンを押して完了！',
     desc:      '「<b>記録を追加する</b>」ボタンを押すだけ！<br>データは<b>ブラウザに自動保存</b>されます。<br>アプリのインストールも不要です。',
@@ -839,77 +996,57 @@ const TUT_STEPS = [
   },
 ];
 
-// 現在表示中のステップ番号（0始まり）
 let tutCurrentStep = 0;
 
-// ヘルプボタンでいつでも再表示
 document.getElementById('helpBtn').addEventListener('click', function () {
   openTutorial();
 });
 
-// ======================================
-// チュートリアル初期化
-// ======================================
 function initTutorial() {
-  // localStorageに完了フラグがなければ初回として表示
   if (!localStorage.getItem(TUT_DONE_KEY)) {
-    // 少しだけ遅らせて、ページの描画後に表示
-    setTimeout(function () {
-      openTutorial();
-    }, 600);
+    setTimeout(function () { openTutorial(); }, 600);
   }
 }
 
-// モーダルを開く
 function openTutorial() {
   tutCurrentStep = 0;
   renderTutStep(tutCurrentStep);
   document.getElementById('tutOverlay').classList.add('visible');
-  document.body.style.overflow = 'hidden'; // 背景スクロールを止める
+  document.body.style.overflow = 'hidden';
 }
 
-// モーダルを閉じる
 function closeTutorial(markDone) {
   document.getElementById('tutOverlay').classList.remove('visible');
   document.body.style.overflow = '';
 
   if (markDone) {
-    // 完了フラグを保存
     localStorage.setItem(TUT_DONE_KEY, '1');
-    // ビーコンを消す
     removeBeacons();
-    // フォームへスムーズスクロール
     setTimeout(function () {
-      document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const formSection = document.querySelector('.form-section');
+      if (formSection) formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 300);
   }
 }
 
-// ステップを描画する
 function renderTutStep(stepIndex) {
-  const step = TUT_STEPS[stepIndex];
+  const step  = TUT_STEPS[stepIndex];
   const total = TUT_STEPS.length;
   const isLast = stepIndex === total - 1;
 
-  // プログレスバー（幅を %で）
   const pct = ((stepIndex + 1) / total) * 100;
   document.getElementById('tutProgressBar').style.width = pct + '%';
-
-  // ステップ番号
   document.getElementById('tutStepNum').textContent = `STEP ${stepIndex + 1} / ${total}`;
 
-  // アイコン（背景色と枠色をステップごとに変える）
   const circle = document.getElementById('tutIconCircle');
-  circle.style.background   = step.iconColor;
-  circle.style.borderColor  = step.iconBorder;
+  circle.style.background  = step.iconColor;
+  circle.style.borderColor = step.iconBorder;
   document.getElementById('tutIcon').textContent = step.icon;
 
-  // タイトル・説明
   document.getElementById('tutTitle').textContent  = step.title;
   document.getElementById('tutDesc').innerHTML     = step.desc;
   document.getElementById('tutHint').textContent   = step.hint;
 
-  // ドット更新
   const dots = document.querySelectorAll('.tut-dot');
   dots.forEach(function (dot, i) {
     dot.classList.remove('active', 'done');
@@ -917,7 +1054,6 @@ function renderTutStep(stepIndex) {
     if (i < stepIndex)   dot.classList.add('done');
   });
 
-  // 最終ステップはボタンをゴールドに、テキストも変える
   const nextBtn = document.getElementById('tutNext');
   if (isLast) {
     nextBtn.textContent = 'さあ、はじめよう！🔥';
@@ -927,44 +1063,35 @@ function renderTutStep(stepIndex) {
     nextBtn.classList.remove('final');
   }
 
-  // スキップボタンのテキスト（最終ステップは「閉じる」に）
   document.getElementById('tutSkip').textContent = isLast ? '閉じる' : 'スキップ';
 
-  // アニメーションのリセット（CSS アニメーションを再生させる）
   const animated = document.querySelectorAll('.tut-title, .tut-desc, .tut-hint');
   animated.forEach(function (el) {
     el.style.animation = 'none';
-    // 強制リフロー
     void el.offsetWidth;
     el.style.animation = '';
   });
 
-  // フォーム上のビーコン：対応するステップラベルだけ光らせる
   updateBeacons(stepIndex);
 }
 
-// 「次へ」ボタン
 document.getElementById('tutNext').addEventListener('click', function () {
   if (tutCurrentStep < TUT_STEPS.length - 1) {
     tutCurrentStep++;
     renderTutStep(tutCurrentStep);
   } else {
-    // 最終ステップ → 完了
     closeTutorial(true);
   }
 });
 
-// 「スキップ / 閉じる」ボタン
 document.getElementById('tutSkip').addEventListener('click', function () {
   closeTutorial(true);
 });
 
-// 「✕」ボタン
 document.getElementById('tutClose').addEventListener('click', function () {
   closeTutorial(true);
 });
 
-// オーバーレイ背景クリックで閉じる
 document.getElementById('tutOverlay').addEventListener('click', function (e) {
   if (e.target === this) closeTutorial(true);
 });
@@ -972,8 +1099,6 @@ document.getElementById('tutOverlay').addEventListener('click', function (e) {
 // ======================================
 // フォームのビーコン（ガイド光点）
 // ======================================
-
-// 初回訪問ならビーコンを付ける
 function initBeacons() {
   if (!localStorage.getItem(TUT_DONE_KEY)) {
     document.querySelectorAll('.form-step-label').forEach(function (el) {
@@ -982,11 +1107,9 @@ function initBeacons() {
   }
 }
 
-// チュートリアル中：現在のステップに対応するラベルだけ光らせる
 function updateBeacons(stepIndex) {
   const labels = document.querySelectorAll('.form-step-label');
   labels.forEach(function (el, i) {
-    // stepIndex 0→STEP1, 1→STEP2, 2→STEP3、3→STEP4
     if (i === stepIndex) {
       el.classList.add('beacon');
     } else {
@@ -995,19 +1118,13 @@ function updateBeacons(stepIndex) {
   });
 }
 
-// ビーコンをすべて消す（チュートリアル完了時）
 function removeBeacons() {
   document.querySelectorAll('.form-step-label').forEach(function (el) {
     el.classList.remove('beacon');
   });
 }
 
-// 記録追加後にビーコンを消す（既存 checkAchievements の後に呼ぶ）
-// ※ フォーム submit ハンドラー内で renderAll() を呼んでいるので、
-//   ここで removeBeacons() を呼んでも問題ない
-const _origFormSubmit = document.getElementById('workoutForm').onsubmit;
 document.getElementById('workoutForm').addEventListener('submit', function () {
-  // 記録が追加されたらビーコンは不要
   removeBeacons();
   localStorage.setItem(TUT_DONE_KEY, '1');
-}, { once: true }); // 最初の1回だけ
+}, { once: true });

@@ -5,34 +5,189 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#0b0b14" />
-  <title>IRON LOG — 筋トレ管理ツール</title>
+  <meta name="theme-color" content="#020c1b" />
+  <title>IRON LOG — SYSTEM v2.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ======== ヘッダー ======== -->
-  <header>
-    <div class="header-inner">
-      <div class="header-left">
-        <div class="header-logo">💪 IRON LOG</div>
-        <div class="header-tagline">あなたの成長を、数字で証明する。</div>
+<!-- スキャンライン演出 -->
+<div class="scanlines" aria-hidden="true"></div>
+
+<!-- ======== ヘッダー ======== -->
+<header>
+  <div class="header-inner">
+    <div class="header-left">
+      <div class="header-logo">IRON LOG</div>
+      <div class="header-tagline">PERFORMANCE TRACKING SYSTEM v2.0</div>
+    </div>
+    <div class="header-right-group">
+      <div class="header-rank-pill" id="headerRankPill">
+        <span class="rank-dot"></span>
+        <span id="headerRankIcon">🌱</span>
+        <span id="headerRankName">ルーキー</span>
       </div>
-      <div class="header-right-group">
-        <div class="header-rank-pill" id="headerRankPill">
-          <span id="headerRankIcon">🌱</span>
-          <span id="headerRankName">ルーキー</span>
+      <button class="help-btn" id="helpBtn" title="使い方を見る">?</button>
+    </div>
+  </div>
+</header>
+
+<!-- ======== メインレイアウト（3カラム） ======== -->
+<div class="app-layout">
+
+  <!-- ===== 左カラム：ボディビジュアル ===== -->
+  <aside class="col-left">
+    <div class="panel body-panel">
+      <div class="panel-header">
+        <span class="panel-dot"></span>
+        BODY SCAN
+        <span class="panel-status" id="scanStatus">ONLINE</span>
+      </div>
+
+      <!-- スキャンコンテナ -->
+      <div class="scan-container" id="scanContainer">
+
+        <!-- 写真アップロード背景 -->
+        <div class="photo-bg" id="photoBg">
+          <img id="bodyPhoto" alt="body photo" style="display:none;" />
+          <div class="photo-placeholder" id="photoPlaceholder">
+            <div class="placeholder-grid"></div>
+          </div>
         </div>
-        <button class="help-btn" id="helpBtn" title="使い方を見る">？</button>
+
+        <!-- ワイヤーフレームSVG -->
+        <svg class="body-wireframe" id="bodyWireframe"
+             viewBox="0 0 100 260"
+             xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="wf-glow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="2.5" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- 頭部 -->
+          <ellipse cx="50" cy="14" rx="14" ry="14" class="wf-structure"/>
+          <!-- 首 -->
+          <rect x="44" y="27" width="12" height="10" rx="3" class="wf-structure"/>
+
+          <!-- 左肩 (肩) -->
+          <ellipse cx="13" cy="49" rx="11" ry="8"
+                   transform="rotate(-15 13 49)"
+                   class="wf-muscle" data-part="肩"/>
+          <!-- 右肩 (肩) -->
+          <ellipse cx="87" cy="49" rx="11" ry="8"
+                   transform="rotate(15 87 49)"
+                   class="wf-muscle" data-part="肩"/>
+
+          <!-- 鎖骨 -->
+          <line x1="44" y1="37" x2="18" y2="44" class="wf-connector"/>
+          <line x1="56" y1="37" x2="82" y2="44" class="wf-connector"/>
+
+          <!-- 左胸 (胸) -->
+          <path d="M18,44 L50,44 L50,80 L16,75 Z"
+                class="wf-muscle" data-part="胸"/>
+          <!-- 右胸 (胸) -->
+          <path d="M82,44 L50,44 L50,80 L84,75 Z"
+                class="wf-muscle" data-part="胸"/>
+          <!-- 胸骨ライン -->
+          <line x1="50" y1="44" x2="50" y2="80" class="wf-divider"/>
+
+          <!-- 左広背筋 (背中) -->
+          <path d="M18,44 L10,52 L8,110 L18,114 L16,75 Z"
+                class="wf-muscle" data-part="背中"/>
+          <!-- 右広背筋 (背中) -->
+          <path d="M82,44 L90,52 L92,110 L82,114 L84,75 Z"
+                class="wf-muscle" data-part="背中"/>
+
+          <!-- 左上腕 (腕) -->
+          <rect x="5" y="52" width="13" height="46" rx="6"
+                transform="rotate(-8 5 52)"
+                class="wf-muscle" data-part="腕"/>
+          <!-- 右上腕 (腕) -->
+          <rect x="82" y="52" width="13" height="46" rx="6"
+                transform="rotate(8 82 52)"
+                class="wf-muscle" data-part="腕"/>
+
+          <!-- 左前腕 (腕) -->
+          <rect x="1" y="100" width="11" height="37" rx="5"
+                transform="rotate(-5 1 100)"
+                class="wf-muscle" data-part="腕"/>
+          <!-- 右前腕 (腕) -->
+          <rect x="88" y="100" width="11" height="37" rx="5"
+                transform="rotate(5 88 100)"
+                class="wf-muscle" data-part="腕"/>
+
+          <!-- 腹筋 (腹) -->
+          <rect x="18" y="80" width="64" height="37" rx="2"
+                class="wf-muscle" data-part="腹"/>
+          <!-- 腹筋グリッドライン -->
+          <line x1="50" y1="80" x2="50" y2="117" class="wf-grid"/>
+          <line x1="18" y1="95" x2="82" y2="95" class="wf-grid"/>
+          <line x1="18" y1="108" x2="82" y2="108" class="wf-grid"/>
+
+          <!-- 骨盤 (全身) -->
+          <path d="M18,117 Q50,132 82,117 L80,132 Q50,145 20,132 Z"
+                class="wf-muscle" data-part="全身"/>
+
+          <!-- 左大腿 (脚) -->
+          <path d="M20,132 L16,132 L22,193 L42,195 L44,132 Z"
+                class="wf-muscle" data-part="脚"/>
+          <!-- 右大腿 (脚) -->
+          <path d="M80,132 L84,132 L78,193 L58,195 L56,132 Z"
+                class="wf-muscle" data-part="脚"/>
+
+          <!-- 左下腿 (脚) -->
+          <path d="M22,195 L18,252 L36,254 L42,197 Z"
+                class="wf-muscle" data-part="脚"/>
+          <!-- 右下腿 (脚) -->
+          <path d="M78,195 L82,252 L64,254 L58,197 Z"
+                class="wf-muscle" data-part="脚"/>
+
+          <!-- 関節マーカー -->
+          <circle cx="7" cy="99" r="3" class="wf-joint"/>  <!-- 左肘 -->
+          <circle cx="93" cy="99" r="3" class="wf-joint"/> <!-- 右肘 -->
+          <circle cx="30" cy="194" r="3.5" class="wf-joint"/> <!-- 左膝 -->
+          <circle cx="70" cy="194" r="3.5" class="wf-joint"/> <!-- 右膝 -->
+        </svg>
+
+        <!-- スキャンライン -->
+        <div class="scan-sweep" id="scanSweep"></div>
+        <!-- スキャン横線エフェクト -->
+        <div class="scan-grid-overlay" aria-hidden="true"></div>
+      </div>
+
+      <!-- 写真アップロードボタン -->
+      <div class="upload-row">
+        <input type="file" id="photoUpload" accept="image/*" style="display:none;" />
+        <label for="photoUpload" class="btn-upload" id="uploadLabel">
+          <span>📷</span> <span id="uploadBtnText">写真をアップロード</span>
+        </label>
+        <button class="btn-remove-photo" id="removePhoto" style="display:none;">✕ 削除</button>
+      </div>
+
+      <!-- 筋肉グループステータス -->
+      <div class="muscle-header">
+        <span class="panel-dot small"></span>
+        MUSCLE STATUS <span class="muscle-period">/ 直近7日</span>
+      </div>
+      <div class="muscle-group-status" id="muscleGroupStatus">
+        <!-- JSで生成 -->
       </div>
     </div>
-  </header>
+  </aside>
 
-  <main>
+  <!-- ===== 中央カラム：ダッシュボード ===== -->
+  <main class="col-center">
 
     <!-- ==============================
          ヒーローパネル
-         ランク / ストリーク / 週達成率
     ================================= -->
     <section class="hero-section">
 
@@ -43,7 +198,7 @@
             <span class="rank-diamond-inner" id="rankDiamondIcon">🌱</span>
           </div>
         </div>
-        <div class="rank-label-sm">現在のランク</div>
+        <div class="rank-label-sm">RANK</div>
         <div class="rank-name-lg" id="rankNameLg">ルーキー</div>
         <div class="rank-session-count" id="rankSessionCount">0 回</div>
         <div class="xp-bar-wrap">
@@ -52,12 +207,9 @@
           </div>
         </div>
         <div class="xp-label" id="xpLabel">次まで あと 5 回</div>
-        <div class="milestone-pills" id="milestonePills">
-          <!-- JSで生成 -->
-        </div>
+        <div class="milestone-pills" id="milestonePills"></div>
       </div>
 
-      <!-- セパレーター -->
       <div class="hero-sep"></div>
 
       <!-- ブロック② ストリーク -->
@@ -67,15 +219,11 @@
           <span class="streak-big-num" id="streakBigNum">0</span>
           <span class="streak-unit">日</span>
         </div>
-        <div class="streak-title">連続ストリーク</div>
+        <div class="streak-title">STREAK</div>
         <div class="streak-msg" id="streakMsg">今日もジムへ行こう！</div>
-        <!-- 今週カレンダードット -->
-        <div class="week-dots" id="weekDots">
-          <!-- JSで生成 -->
-        </div>
+        <div class="week-dots" id="weekDots"></div>
       </div>
 
-      <!-- セパレーター -->
       <div class="hero-sep"></div>
 
       <!-- ブロック③ 今週達成率 -->
@@ -84,17 +232,15 @@
           <svg class="progress-ring" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#b06eff" />
-                <stop offset="100%" stop-color="#7c6aff" />
+                <stop offset="0%" stop-color="#00d4ff" />
+                <stop offset="100%" stop-color="#0066ff" />
               </linearGradient>
               <linearGradient id="ringGradDone" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#ffd740" />
                 <stop offset="100%" stop-color="#ff8f00" />
               </linearGradient>
             </defs>
-            <!-- 背景トラック -->
             <circle class="ring-track" cx="45" cy="45" r="36" />
-            <!-- 進捗 -->
             <circle class="ring-prog" id="ringProg" cx="45" cy="45" r="36"
               stroke-dasharray="226" stroke-dashoffset="226" />
           </svg>
@@ -117,67 +263,29 @@
     ================================= -->
     <section class="stats-section">
       <div class="stat-card">
-        <div class="stat-icon">📊</div>
+        <div class="stat-icon-hud">SESSIONS</div>
         <div class="stat-value" id="totalCount">0</div>
         <div class="stat-label">合計トレ回数</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">⚡</div>
+        <div class="stat-icon-hud">VOLUME</div>
         <div class="stat-value" id="totalVolume">0</div>
         <div class="stat-label">合計ボリューム (kg)</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">⚖️</div>
+        <div class="stat-icon-hud">WEIGHT</div>
         <div class="stat-value" id="latestWeight">--</div>
         <div class="stat-label">最新体重 (kg)</div>
       </div>
     </section>
 
     <!-- ==============================
-         種目ごとの最高重量
-    ================================= -->
-    <section class="max-weight-section collapsible-section">
-      <details open>
-        <summary class="section-summary">
-          <h2>🏆 種目ごとの最高重量</h2>
-          <span class="collapse-arrow" aria-hidden="true">▲</span>
-        </summary>
-        <div id="maxWeightList" class="max-weight-list">
-          <p class="empty-msg">記録がまだありません</p>
-        </div>
-      </details>
-    </section>
-
-    <!-- ==============================
-         重量の伸びグラフ
-    ================================= -->
-    <section class="graph-section collapsible-section">
-      <details open>
-        <summary class="section-summary">
-          <h2>📈 重量の伸びグラフ</h2>
-          <span class="collapse-arrow" aria-hidden="true">▲</span>
-        </summary>
-        <div class="graph-controls">
-          <label for="graphExercise">種目を選択：</label>
-          <select id="graphExercise">
-            <option value="">-- 種目を選択してください --</option>
-          </select>
-        </div>
-        <div class="canvas-wrapper">
-          <canvas id="weightGraph"></canvas>
-          <p class="graph-empty-msg" id="graphEmptyMsg">種目を選択するとグラフが表示されます</p>
-        </div>
-      </details>
-    </section>
-
-    <!-- ==============================
          トレーニング記録フォーム
     ================================= -->
     <section class="form-section">
-      <h2>📝 今日のトレーニングを記録する</h2>
+      <h2>// TRAINING LOG</h2>
       <form id="workoutForm" novalidate>
 
-        <!-- STEP 1: 日付・体重 -->
         <div class="form-step-label">STEP 1 — 日付・体重</div>
         <div class="form-row">
           <div class="form-group">
@@ -190,9 +298,7 @@
           </div>
         </div>
 
-        <!-- STEP 2: 部位選択（ビジュアルグリッド） -->
         <div class="form-step-label">STEP 2 — 部位を選ぶ</div>
-        <!-- 値保持用の隠しフィールド -->
         <input type="hidden" id="bodyPart" />
         <div class="bp-grid" id="bpGrid">
           <button type="button" class="bp-btn" data-part="胸"   data-color="blue">💙<br>胸</button>
@@ -206,21 +312,18 @@
         </div>
         <div class="bp-error" id="bpError" style="display:none;">部位を選択してください</div>
 
-        <!-- STEP 3: 種目名 + プリセット -->
         <div class="form-step-label">STEP 3 — 種目名</div>
         <div class="form-group">
           <label for="exerciseName">種目名</label>
           <input type="text" id="exerciseName" placeholder="入力 または 下から選択" required />
         </div>
 
-        <!-- おすすめ種目プリセット（部位選択後に表示） -->
         <div class="preset-area" id="presetArea" style="display:none;">
-          <div class="preset-label">💡 おすすめ種目（タップで選択）</div>
+          <div class="preset-label">// おすすめ種目（タップで選択）</div>
           <div class="preset-chips" id="presetChips"></div>
           <div class="preset-desc" id="presetDesc"></div>
         </div>
 
-        <!-- STEP 4: 重量・回数・セット数 -->
         <div class="form-step-label">STEP 4 — 数値を入力</div>
         <div class="form-row three-col">
           <div class="form-group">
@@ -237,20 +340,64 @@
           </div>
         </div>
 
-        <!-- ボリューム自動計算プレビュー -->
         <div class="volume-preview" id="volumePreview">
-          ボリューム: -- kg　（重量 × 回数 × セット数）
+          VOLUME: -- kg　（重量 × 回数 × セット数）
         </div>
 
-        <!-- メモ -->
         <div class="form-group">
           <label for="memo">メモ　<span class="optional">任意</span></label>
           <textarea id="memo" placeholder="例: フォームを意識した、少し疲れていたなど" rows="2"></textarea>
         </div>
 
-        <button type="submit" class="btn-add">＋ 記録を追加する</button>
+        <button type="submit" class="btn-add">
+          <span class="btn-add-icon">+</span>
+          <span>記録を追加する</span>
+          <span class="btn-glow-bar"></span>
+        </button>
 
       </form>
+    </section>
+
+  </main>
+
+  <!-- ===== 右カラム：履歴・グラフ ===== -->
+  <aside class="col-right">
+
+    <!-- ==============================
+         種目ごとの最高重量
+    ================================= -->
+    <section class="max-weight-section collapsible-section">
+      <details open>
+        <summary class="section-summary">
+          <h2>// MAX WEIGHT</h2>
+          <span class="collapse-arrow" aria-hidden="true">▲</span>
+        </summary>
+        <div id="maxWeightList" class="max-weight-list">
+          <p class="empty-msg">記録がまだありません</p>
+        </div>
+      </details>
+    </section>
+
+    <!-- ==============================
+         重量の伸びグラフ
+    ================================= -->
+    <section class="graph-section collapsible-section">
+      <details open>
+        <summary class="section-summary">
+          <h2>// PROGRESS GRAPH</h2>
+          <span class="collapse-arrow" aria-hidden="true">▲</span>
+        </summary>
+        <div class="graph-controls">
+          <label for="graphExercise">種目：</label>
+          <select id="graphExercise">
+            <option value="">-- 種目を選択 --</option>
+          </select>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="weightGraph"></canvas>
+          <p class="graph-empty-msg" id="graphEmptyMsg">種目を選択するとグラフが表示されます</p>
+        </div>
+      </details>
     </section>
 
     <!-- ==============================
@@ -258,7 +405,7 @@
     ================================= -->
     <section class="list-section">
       <div class="list-header">
-        <h2>📋 記録一覧</h2>
+        <h2>// RECORDS</h2>
         <button id="clearAllBtn" class="btn-clear">全削除</button>
       </div>
 
@@ -300,64 +447,49 @@
       </div>
     </section>
 
-  </main>
+  </aside>
 
-  <footer>
-    <p>IRON LOG — データはブラウザに自動保存されます（localStorage）</p>
-  </footer>
+</div><!-- /.app-layout -->
 
-  <!-- ======================================
-       チュートリアルモーダル
-  ====================================== -->
-  <div class="tut-overlay" id="tutOverlay">
-    <div class="tut-card" id="tutCard">
+<footer>
+  <p>IRON LOG — データはブラウザに自動保存されます（localStorage）</p>
+</footer>
 
-      <!-- 閉じるボタン -->
-      <button class="tut-close" id="tutClose" aria-label="閉じる">✕</button>
-
-      <!-- プログレスバー -->
-      <div class="tut-progress-track">
-        <div class="tut-progress-bar" id="tutProgressBar" style="width: 25%"></div>
-      </div>
-
-      <!-- ステップ番号 -->
-      <div class="tut-step-num" id="tutStepNum">STEP 1 / 4</div>
-
-      <!-- アイコン -->
-      <div class="tut-icon-circle" id="tutIconCircle">
-        <span class="tut-icon" id="tutIcon">📅</span>
-      </div>
-
-      <!-- タイトル・説明 -->
-      <div class="tut-title" id="tutTitle">まず日付と体重を入力</div>
-      <div class="tut-desc" id="tutDesc"></div>
-
-      <!-- フォームへのヒント矢印 -->
-      <div class="tut-hint" id="tutHint"></div>
-
-      <!-- ドット -->
-      <div class="tut-dots" id="tutDots">
-        <span class="tut-dot active"></span>
-        <span class="tut-dot"></span>
-        <span class="tut-dot"></span>
-        <span class="tut-dot"></span>
-      </div>
-
-      <!-- ボタン -->
-      <div class="tut-actions">
-        <button class="tut-skip" id="tutSkip">スキップ</button>
-        <button class="tut-next" id="tutNext">次へ →</button>
-      </div>
-
+<!-- ======================================
+     チュートリアルモーダル
+====================================== -->
+<div class="tut-overlay" id="tutOverlay">
+  <div class="tut-card" id="tutCard">
+    <button class="tut-close" id="tutClose" aria-label="閉じる">✕</button>
+    <div class="tut-progress-track">
+      <div class="tut-progress-bar" id="tutProgressBar" style="width: 25%"></div>
+    </div>
+    <div class="tut-step-num" id="tutStepNum">STEP 1 / 4</div>
+    <div class="tut-icon-circle" id="tutIconCircle">
+      <span class="tut-icon" id="tutIcon">📅</span>
+    </div>
+    <div class="tut-title" id="tutTitle">まず日付と体重を入力</div>
+    <div class="tut-desc" id="tutDesc"></div>
+    <div class="tut-hint" id="tutHint"></div>
+    <div class="tut-dots" id="tutDots">
+      <span class="tut-dot active"></span>
+      <span class="tut-dot"></span>
+      <span class="tut-dot"></span>
+      <span class="tut-dot"></span>
+    </div>
+    <div class="tut-actions">
+      <button class="tut-skip" id="tutSkip">スキップ</button>
+      <button class="tut-next" id="tutNext">次へ →</button>
     </div>
   </div>
+</div>
 
-  <!-- トースト通知 -->
-  <div class="toast" id="toast">
-    <span class="toast-icon" id="toastIcon">🎉</span>
-    <span class="toast-message" id="toastMessage"></span>
-  </div>
+<!-- トースト通知 -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon">🎉</span>
+  <span class="toast-message" id="toastMessage"></span>
+</div>
 
-  <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
